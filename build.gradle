@@ -1,0 +1,95 @@
+buildscript {
+    ext.kotlin_version = '1.1.4-3'
+    ext.java_version = '1.8'
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.1'
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'idea'
+apply plugin: 'com.google.protobuf'
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile 'com.google.protobuf:protobuf-java:latest.release'
+    compile 'com.google.protobuf:protobuf-java-util:latest.release'
+    compile 'com.googlecode.protobuf-java-format:protobuf-java-format:latest.release'
+
+    compile "io.grpc:grpc-netty:latest.release"
+    compile "io.grpc:grpc-protobuf:latest.release"
+    compile "io.grpc:grpc-stub:latest.release"
+    compile "io.netty:netty-tcnative-boringssl-static:2.0.5.Final"
+
+    testCompile "org.jetbrains.kotlinx:kotlinx-coroutines-core:latest.release"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testCompile 'com.jayway.restassured:rest-assured:latest.release'
+    testCompile "io.grpc:grpc-testing:latest.release"
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.3.0'
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:latest.release"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {
+                // To generate deprecated interfaces and static bindService method,
+                // turn the enable_deprecated option to true below:
+                option 'enable_deprecated=false'
+            }
+        }
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("${projectDir}/build/generated/source/proto/main/java")
+        sourceDirs += file("${projectDir}/build/generated/source/proto/main/grpc")
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs file("${projectDir}/build/generated/source/proto/main/java"),
+                    file("${projectDir}/build/generated/source/proto/main/grpc")
+        }
+    }
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+kotlin {
+    experimental {
+        coroutines 'enable'
+    }
+}

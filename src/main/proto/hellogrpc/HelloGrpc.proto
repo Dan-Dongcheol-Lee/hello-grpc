@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api;
+
+option go_package = "hellogrpc";
+option java_package = "hellogrpc";
+option java_outer_classname = "HelloGrpcProto";
+
+service HelloGrpc {
+    rpc Hello (HelloRequest) returns (HelloResponse) {}
+}
+
+message HelloRequest {
+    string text = 1;
+}
+
+message HelloResponse {
+    string text = 1;
+}
+
+
