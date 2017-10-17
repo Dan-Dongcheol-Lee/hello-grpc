@@ -49,6 +49,8 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
                     .build()
 
             resObserver.onNext(response)
+
+            Thread.sleep(1000)
         }
 
         resObserver.onCompleted()
@@ -70,6 +72,8 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
                             .build()
 
                     responseObserver.onNext(res)
+
+                    Thread.sleep(1000)
                 }
             }
 

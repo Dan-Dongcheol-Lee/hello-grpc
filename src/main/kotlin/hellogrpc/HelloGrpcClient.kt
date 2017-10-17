@@ -35,7 +35,7 @@ object Hello1Client {
     }
 }
 
-object Hello2Client {
+object Hello2ClientWithBlockStub {
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -63,6 +63,52 @@ object Hello2Client {
         }
     }
 }
+
+object Hello2ClientWithStreamingStub {
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val port = 9010
+
+        val channel = ManagedChannelBuilder.forAddress("127.0.0.1", port)
+                .usePlaintext(true)
+                .build()
+
+        val stub = HelloGrpc.newStub(channel)
+
+        println("hello2 call ---------------------------------")
+        val request = HelloProto.HelloRequest.newBuilder()
+                .setText("Hello")
+                .build()
+
+        try {
+            val latch = CountDownLatch(1)
+
+            stub.hello2(request, object : StreamObserver<HelloProto.HelloResponse> {
+
+                override fun onNext(res: HelloProto.HelloResponse) {
+                    println("client-hello2: response: $res")
+                }
+
+                override fun onError(t: Throwable) {
+                    println("client-hello2: error: ${t.message}")
+                }
+
+                override fun onCompleted() {
+                    println("client-hello2: completed")
+                    latch.countDown()
+                }
+            })
+
+            latch.await()
+
+        } catch (e: StatusRuntimeException) {
+            throw IllegalStateException(
+                    "Failed to call hello. status: " + e.status + ", message: " + e.message)
+        }
+    }
+}
+
 
 object Hello3Client {
 
