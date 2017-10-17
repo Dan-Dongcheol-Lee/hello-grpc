@@ -4,9 +4,12 @@ import hello.HelloGrpc
 import hello.HelloProto
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusRuntimeException
+import io.grpc.stub.StreamObserver
+import java.util.concurrent.CountDownLatch
 
 object Hello1Client {
 
+    @JvmStatic
     fun main(args: Array<String>) {
         val port = 9010
 
@@ -23,7 +26,7 @@ object Hello1Client {
 
         try {
             val res = stub.hello1(request)
-            println("response: $res")
+            println("client-hello1: response: $res")
 
         } catch (e: StatusRuntimeException) {
             throw IllegalStateException(
@@ -34,6 +37,7 @@ object Hello1Client {
 
 object Hello2Client {
 
+    @JvmStatic
     fun main(args: Array<String>) {
         val port = 9010
 
@@ -41,7 +45,7 @@ object Hello2Client {
                 .usePlaintext(true)
                 .build()
 
-        val stub = HelloGrpc.newFutureStub(channel)
+        val stub = HelloGrpc.newBlockingStub(channel)
 
         println("hello2 call ---------------------------------")
         val request = HelloProto.HelloRequest.newBuilder()
@@ -49,9 +53,9 @@ object Hello2Client {
                 .build()
 
         try {
-            stub.hello1()
-            val res = stub.hello1(request)
-            println("response: $res")
+            stub.hello2(request).forEach {
+                println("client-hello2: response: $it")
+            }
 
         } catch (e: StatusRuntimeException) {
             throw IllegalStateException(
@@ -62,6 +66,7 @@ object Hello2Client {
 
 object Hello3Client {
 
+    @JvmStatic
     fun main(args: Array<String>) {
         val port = 9010
 
@@ -69,43 +74,37 @@ object Hello3Client {
                 .usePlaintext(true)
                 .build()
 
-        val stub = HelloGrpc.newBlockingStub(channel)
+        val stub = HelloGrpc.newStub(channel)
 
         println("hello3 call ---------------------------------")
-        val request = HelloProto.HelloRequest.newBuilder()
-                .setText("Hello")
-                .build()
 
         try {
-            val res = stub.hello1(request)
-            println("response: $res")
+            val latch = CountDownLatch(1)
 
-        } catch (e: StatusRuntimeException) {
-            throw IllegalStateException(
-                    "Failed to call hello. status: " + e.status + ", message: " + e.message)
-        }
-    }
-}
+            val reqObserver = stub.hello3(object : StreamObserver<HelloProto.HelloResponse> {
+                override fun onNext(res: HelloProto.HelloResponse) {
+                    println("client-hello3: response: $res")
+                }
 
-object Hello4Client {
+                override fun onCompleted() {
+                    println("client-hello3: response: completed")
+                    latch.countDown()
+                }
 
-    fun main(args: Array<String>) {
-        val port = 9010
+                override fun onError(t: Throwable) {
+                    println("client-hello3: response: an error: ${t.message}")
+                    latch.countDown()
+                }
+            })
 
-        val channel = ManagedChannelBuilder.forAddress("127.0.0.1", port)
-                .usePlaintext(true)
-                .build()
+            val req = HelloProto.HelloRequest.newBuilder()
+                    .setText("Hello")
+                    .build()
 
-        val stub = HelloGrpc.newBlockingStub(channel)
+            reqObserver.onNext(req)
+            reqObserver.onCompleted()
 
-        println("hello4 call ---------------------------------")
-        val request = HelloProto.HelloRequest.newBuilder()
-                .setText("Hello")
-                .build()
-
-        try {
-            val res = stub.hello1(request)
-            println("response: $res")
+            latch.await()
 
         } catch (e: StatusRuntimeException) {
             throw IllegalStateException(

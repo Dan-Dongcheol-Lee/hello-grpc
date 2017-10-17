@@ -10,11 +10,9 @@ service Hello {
 
     rpc Hello1 (HelloRequest) returns (HelloResponse) {}
 
-    rpc Hello2 (stream HelloRequest) returns (HelloResponse) {}
+    rpc Hello2 (HelloRequest) returns (stream HelloResponse) {}
 
-    rpc Hello3 (HelloRequest) returns (stream HelloResponse) {}
-
-    rpc Hello4 (stream HelloRequest) returns (stream HelloResponse) {}
+    rpc Hello3 (stream HelloRequest) returns (stream HelloResponse) {}
 }
 
 message HelloRequest {
