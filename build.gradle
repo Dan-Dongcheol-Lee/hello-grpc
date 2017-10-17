@@ -30,6 +30,7 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:latest.release"
     compile 'com.google.protobuf:protobuf-java:latest.release'
     compile 'com.google.protobuf:protobuf-java-util:latest.release'
     compile 'com.googlecode.protobuf-java-format:protobuf-java-format:latest.release'
@@ -39,7 +40,6 @@ dependencies {
     compile "io.grpc:grpc-stub:latest.release"
     compile "io.netty:netty-tcnative-boringssl-static:2.0.5.Final"
 
-    testCompile "org.jetbrains.kotlinx:kotlinx-coroutines-core:latest.release"
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
     testCompile 'com.jayway.restassured:rest-assured:latest.release'
     testCompile "io.grpc:grpc-testing:latest.release"

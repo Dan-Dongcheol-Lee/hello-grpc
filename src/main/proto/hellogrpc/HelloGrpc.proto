@@ -2,16 +2,24 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "hellogrpc";
-option java_package = "hellogrpc";
-option java_outer_classname = "HelloGrpcProto";
+option go_package = "hello";
+option java_package = "hello";
+option java_outer_classname = "HelloProto";
 
-service HelloGrpc {
-    rpc Hello (HelloRequest) returns (HelloResponse) {}
+service Hello {
+
+    rpc Hello1 (HelloRequest) returns (HelloResponse) {}
+
+    rpc Hello2 (stream HelloRequest) returns (HelloResponse) {}
+
+    rpc Hello3 (HelloRequest) returns (stream HelloResponse) {}
+
+    rpc Hello4 (stream HelloRequest) returns (stream HelloResponse) {}
 }
 
 message HelloRequest {
     string text = 1;
+//    string text2 = 2;
 }
 
 message HelloResponse {
