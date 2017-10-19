@@ -5,7 +5,12 @@ import hello.HelloProto
 import io.grpc.ManagedChannelBuilder
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 object Hello1Client {
 
@@ -143,14 +148,15 @@ object Hello3Client {
                 }
             })
 
-            val req = HelloProto.HelloRequest.newBuilder()
+            val request = HelloProto.HelloRequest.newBuilder()
                     .setText("Hello")
                     .build()
+            reqObserver.onNext(request)
 
-            reqObserver.onNext(req)
-            reqObserver.onCompleted()
+            println("client-hello3: request: $request")
 
             latch.await()
+            reqObserver.onCompleted()
 
         } catch (e: StatusRuntimeException) {
             throw IllegalStateException(

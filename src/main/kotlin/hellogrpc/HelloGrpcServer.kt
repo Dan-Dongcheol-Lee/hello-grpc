@@ -92,7 +92,7 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
                     // run in async and apply random delay
                     val res = async {
 
-                        delay((0..10).random().toLong(), TimeUnit.SECONDS)
+                        delay((0..5).random().toLong(), TimeUnit.SECONDS)
 
                         val response = HelloProto.HelloResponse.newBuilder()
                                 .setText("server-hello3: Reply ${req.text} from stream response: $it")
@@ -107,6 +107,8 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
                 runBlocking {
                     resList.forEach { it.await() }
                 }
+
+                resObserver.onCompleted()
             }
 
             override fun onError(t: Throwable) {
@@ -114,7 +116,6 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
             }
 
             override fun onCompleted() {
-                resObserver.onCompleted()
             }
         }
     }
