@@ -4,6 +4,12 @@ import hello.HelloGrpc
 import hello.HelloProto
 import io.grpc.ServerBuilder
 import io.grpc.stub.StreamObserver
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 fun main(args: Array<String>) {
@@ -19,6 +25,8 @@ fun main(args: Array<String>) {
     server.awaitTermination()
 }
 
+
+fun ClosedRange<Int>.random() = Random().nextInt(endInclusive - start) + start
 
 class HelloServerImpl : HelloGrpc.HelloImplBase() {
 
@@ -43,21 +51,33 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
 
         println("server-hello2: Received request: $req")
 
-        (1 .. 5).forEach { it ->
-            val response = HelloProto.HelloResponse.newBuilder()
-                    .setText("server-hello2: Reply ${req.text} from stream response: $it")
-                    .build()
+        val resList = mutableListOf<Deferred<HelloProto.HelloResponse>>()
+        (1..5).forEach { it ->
 
-            resObserver.onNext(response)
+            // run in async and apply random delay
+            val res = async {
 
-            Thread.sleep(1000)
+                delay((0..10).random().toLong(), TimeUnit.SECONDS)
+
+                val response = HelloProto.HelloResponse.newBuilder()
+                        .setText("server-hello2: Reply ${req.text} from stream response: $it")
+                        .build()
+
+                resObserver.onNext(response)
+                response
+            }
+            resList.add(res)
+        }
+
+        runBlocking {
+            resList.forEach { it.await() }
         }
 
         resObserver.onCompleted()
     }
 
     override fun hello3(
-            responseObserver: StreamObserver<HelloProto.HelloResponse>
+            resObserver: StreamObserver<HelloProto.HelloResponse>
     ): StreamObserver<HelloProto.HelloRequest> {
 
         return object : StreamObserver<HelloProto.HelloRequest> {
@@ -66,14 +86,26 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
 
                 println("server-hello3: Received request: $req")
 
-                (1 .. 5).forEach { it ->
-                    val res = HelloProto.HelloResponse.newBuilder()
-                            .setText("server-hello3: Reply ${req.text} from stream response: $it")
-                            .build()
+                val resList = mutableListOf<Deferred<HelloProto.HelloResponse>>()
+                (1..5).forEach { it ->
 
-                    responseObserver.onNext(res)
+                    // run in async and apply random delay
+                    val res = async {
 
-                    Thread.sleep(1000)
+                        delay((0..10).random().toLong(), TimeUnit.SECONDS)
+
+                        val response = HelloProto.HelloResponse.newBuilder()
+                                .setText("server-hello3: Reply ${req.text} from stream response: $it")
+                                .build()
+
+                        resObserver.onNext(response)
+                        response
+                    }
+                    resList.add(res)
+                }
+
+                runBlocking {
+                    resList.forEach { it.await() }
                 }
             }
 
@@ -82,7 +114,7 @@ class HelloServerImpl : HelloGrpc.HelloImplBase() {
             }
 
             override fun onCompleted() {
-                responseObserver.onCompleted()
+                resObserver.onCompleted()
             }
         }
     }
